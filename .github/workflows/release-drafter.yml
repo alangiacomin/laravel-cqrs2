@@ -8,10 +8,7 @@ on:
       - synchronize
       - labeled
       - unlabeled
-
-  push:
-    branches:
-      - main
+      - closed
 
 permissions:
   contents: write
@@ -19,30 +16,27 @@ permissions:
 
 jobs:
   verifica-label-versione:
-    if: github.event_name == 'pull_request'
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Controlla presenza label valida
+      - name: Controlla label
         uses: actions/github-script@v8
         with:
           script: |
             const labels = context.payload.pull_request.labels.map(l => l.name)
-
             const valide = ['major', 'minor', 'patch']
-
             const trovate = labels.filter(l => valide.includes(l))
 
             if (trovate.length !== 1) {
               core.setFailed(
-                'La PR deve avere una e una sola label tra: major, minor, patch'
+                'Serve una sola label tra major, minor o patch'
               )
             }
 
-  aggiorna-release-draft:
-    if: github.event_name == 'push'
+  aggiorna-draft:
+    if: github.event.pull_request.merged == true || github.event.action != 'closed'
     runs-on: ubuntu-latest
-    #needs: []
 
     steps:
       - uses: release-drafter/release-drafter@v6
