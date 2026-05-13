@@ -28,3 +28,5 @@ laravel-template":
 https://github.com/alangiacomin/laravel-template
 
 Questo template fornisce una base completa su cui integrare `laravel-cqrs`.
+
+Questo template fornisce una base completa su cui integrare `laravel-cqrs`.
