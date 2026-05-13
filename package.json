@@ -1,0 +1,13 @@
+{
+  "name": "laravel-cqrs",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "lefthook": "^2.1.6",
+    "standard-version": "^9.5.0"
+  },
+  "scripts": {
+    "prepare": "lefthook install",
+    "release": "standard-version"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "alangiacomin/laravel-cqrs",
+  "license": "MIT",
+  "description": "Laravel CQRS",
+  "keywords": [
+    "alangiacomin",
+    "cqrs",
+    "laravel"
+  ],
+  "homepage": "https://github.com/alangiacomin/laravel-cqrs",
+  "authors": [
+    {
+      "name": "Alan Giacomin",
+      "email": "alan.giacomin@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "inertiajs/inertia-laravel": "^3.1.0",
+    "laravel/framework": "^13.8.0",
+    "php": "^8.4",
+    "spatie/laravel-data": "^4.23.0",
+    "spatie/laravel-typescript-transformer": "^2.6.0"
+  },
+  "require-dev": {
+    "larastan/larastan": "^3.9.6",
+    "laravel/pint": "^1.29.1",
+    "mockery/mockery": "^1.6.12",
+    "orchestra/testbench": "^11.1.0",
+    "pestphp/pest": "^3.8.6"
+  },
+  "suggest": {
+    "spatie/enum": "Install it in the consuming app only if you still use Spatie enum classes and want them transformed to TypeScript.",
+    "tightenco/ziggy": "Install it in the consuming app only if you need JavaScript route generation from Laravel named routes."
+  },
+  "autoload": {
+    "exclude-from-classmap": [
+    ],
+    "psr-4": {
+      "AlanGiacomin\\LaravelCqrs\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests"
+    }
+  },
+  "scripts": {
+    "test": "./vendor/bin/pest --no-coverage --compact",
+    "test-coverage": [
+      "@putenv XDEBUG_MODE=coverage",
+      "./vendor/bin/pest --coverage --coverage-html coverage --compact"
+    ],
+    "phpstan": "vendor/bin/phpstan analyse --memory-limit=1G --error-format=table"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "AlanGiacomin\\LaravelCqrs\\LaravelCqrsServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
