@@ -3,37 +3,40 @@ name: Release Drafter
 on:
   pull_request:
     types:
-      - opened
-      - reopened
-      - synchronize
+      - closed
+
+  pull_request_target:
+    types:
+      - edited
       - labeled
       - unlabeled
-      - closed
+      - ready_for_review
 
 permissions:
   contents: write
   pull-requests: read
 
 jobs:
-  verifica-label-per-merge:
-    if: github.event.action != 'closed'
+  verifica-label:
+    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Controlla label solo se pronta al merge
+      - name: Verifica label versione
         uses: actions/github-script@v8
         with:
           script: |
-            const labels = context.payload.pull_request.labels.map(l => l.name)
+            const pr = context.payload.pull_request
+
+            if (pr.draft) return
+
+            const labels = pr.labels.map(l => l.name)
             const valide = ['major', 'minor', 'patch']
             const trovate = labels.filter(l => valide.includes(l))
 
-            const pronta =
-              context.payload.pull_request.draft === false
-
-            if (pronta && trovate.length !== 1) {
+            if (trovate.length !== 1) {
               core.setFailed(
-                'Prima del merge devi assegnare una sola label tra major, minor o patch'
+                'Prima del merge serve una sola label: major, minor o patch'
               )
             }
 
