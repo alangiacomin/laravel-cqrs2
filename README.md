@@ -22,6 +22,4 @@ pacchetto.
 
 ## Applicazione base pronta all'uso
 
-Per creare rapidamente una applicazione Laravel già configurata e pronta all'uso è possibile usare il repository "laravel-template": https://github.com/alangiacomin/laravel-template
 
-Questo template fornisce una base completa su cui integrare `laravel-cqrs`.
