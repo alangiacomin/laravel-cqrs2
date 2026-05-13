@@ -1,7 +1,5 @@
 # laravel-cqrs
 
-Un pacchetto, una garanzia
-
 Semplice pacchetto per organizzare il pattern CQRS in applicazioni Laravel. Fornisce una struttura minima per Commands,
 Queries e relativi handler, facilitando la separazione tra operazioni di scrittura e lettura.
 
