@@ -15,12 +15,12 @@ permissions:
   pull-requests: read
 
 jobs:
-  verifica-label-versione:
+  verifica-label-per-merge:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Controlla label
+      - name: Controlla label solo se pronta al merge
         uses: actions/github-script@v8
         with:
           script: |
@@ -28,14 +28,17 @@ jobs:
             const valide = ['major', 'minor', 'patch']
             const trovate = labels.filter(l => valide.includes(l))
 
-            if (trovate.length !== 1) {
+            const pronta =
+              context.payload.pull_request.draft === false
+
+            if (pronta && trovate.length !== 1) {
               core.setFailed(
-                'Serve una sola label tra major, minor o patch'
+                'Prima del merge devi assegnare una sola label tra major, minor o patch'
               )
             }
 
   aggiorna-draft:
-    if: github.event.pull_request.merged == true || github.event.action != 'closed'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
