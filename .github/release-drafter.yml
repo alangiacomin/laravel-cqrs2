@@ -1,5 +1,6 @@
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
+
 categories:
   - title: 🚨 Breaking changes
     labels:
@@ -10,7 +11,7 @@ categories:
   - title: 🐛 Correzioni
     labels:
       - patch
-change-template: '- $TITLE by @$AUTHOR in #$NUMBER'
+      
 version-resolver:
   major:
     labels:
@@ -22,5 +23,14 @@ version-resolver:
     labels:
       - patch
 default: patch
+
 template: |  
+  ## Modifiche
+
   $CHANGES
+
+  ## Altre modifiche
+
+  $UNCATEGORIZED_CHANGES
+  
+change-template: '- $TITLE by @$AUTHOR in #$NUMBER'
