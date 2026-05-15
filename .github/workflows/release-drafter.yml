@@ -10,9 +10,6 @@ on:
       - labeled
       - unlabeled
       - closed
-  pull_request_review:
-    types:
-      - submitted
 
 permissions:
   contents: write
@@ -29,64 +26,20 @@ jobs:
           script: |
             const pr = context.payload.pull_request
 
-            const validaLabelVersione = () => {
-              const labels = pr.labels.map(l => l.name)
-              const valide = ['major', 'minor', 'patch']
-              const trovate = labels.filter(l => valide.includes(l))
-
-              if (trovate.length !== 1) {
-                core.setFailed(
-                  'Prima del merge serve una sola label: major, minor o patch'
-                )
-              }
-            }
-
-            if (context.payload.action === 'closed') {
-              if (!pr.merged) {
-                core.info('PR chiusa senza merge: nessun rilascio da preparare')
-                return
-              }
-
-              validaLabelVersione()
+            if (context.payload.action === 'closed' && !pr.merged) {
+              core.info('PR chiusa senza merge: nessun rilascio da preparare')
               return
             }
 
-            if (
-              context.eventName === 'pull_request_review' &&
-              context.payload.review.state === 'approved'
-            ) {
-              validaLabelVersione()
-              return
-            }
+            const labels = pr.labels.map(l => l.name)
+            const valide = ['major', 'minor', 'patch']
+            const trovate = labels.filter(l => valide.includes(l))
 
-            const reviews = await github.paginate(
-              github.rest.pulls.listReviews,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                per_page: 100,
-              }
-            )
-
-            const ultimiStatiPerReviewer = new Map()
-
-            for (const review of reviews) {
-              ultimiStatiPerReviewer.set(review.user.id, review.state)
-            }
-
-            const approvata = [...ultimiStatiPerReviewer.values()].includes(
-              'APPROVED'
-            )
-
-            if (!approvata) {
-              core.info(
-                'Controllo label saltato: la PR non ha ancora una review approved'
+            if (trovate.length !== 1) {
+              core.setFailed(
+                'Prima del merge serve una sola label: major, minor o patch'
               )
-              return
             }
-
-            validaLabelVersione()
 
   aggiorna-draft:
     needs: verifica-label
