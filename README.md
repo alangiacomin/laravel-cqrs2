@@ -20,9 +20,6 @@ Installa il pacchetto con Composer:
 Questo README è volutamente minimale: per esempi dettagliati e integrazione nell'applicazione, consultare il codice del
 pacchetto.
 
-Questo README è volutamente minimale: per esempi dettagliati e integrazione nell'applicazione, consultare il codice del
-pacchetto.
-
 ## Applicazione base pronta all'uso
 
 
