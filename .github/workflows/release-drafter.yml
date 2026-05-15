@@ -14,36 +14,54 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  statuses: write
 
 jobs:
   verifica-label:
     runs-on: ubuntu-latest
+    outputs:
+      valid: ${{ steps.release-label.outputs.result }}
 
     steps:
       - name: Verifica label versione
+        id: release-label
         uses: actions/github-script@v8
         with:
+          result-encoding: string
           script: |
             const pr = context.payload.pull_request
 
             if (context.payload.action === 'closed' && !pr.merged) {
               core.info('PR chiusa senza merge: nessun rilascio da preparare')
-              return
+              return 'false'
             }
 
             const labels = pr.labels.map(l => l.name)
             const valide = ['major', 'minor', 'patch']
             const trovate = labels.filter(l => valide.includes(l))
+            const valid = trovate.length === 1
 
-            if (trovate.length !== 1) {
-              core.setFailed(
-                'Prima del merge serve una sola label: major, minor o patch'
-              )
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: valid ? 'success' : 'failure',
+              context: 'release-label',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: valid
+                ? `Label release valida: ${trovate[0]}`
+                : 'Serve una sola label release: major, minor o patch',
+            })
+
+            if (!valid) {
+              core.warning('Prima del merge serve una sola label: major, minor o patch')
             }
+
+            return valid ? 'true' : 'false'
 
   aggiorna-draft:
     needs: verifica-label
-    if: github.event_name == 'pull_request_target' && github.event.pull_request.merged == true
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.merged == true && needs.verifica-label.outputs.valid == 'true'
     runs-on: ubuntu-latest
 
     steps:
