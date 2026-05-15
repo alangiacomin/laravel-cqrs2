@@ -3,14 +3,11 @@ name: Release Drafter
 on:
   pull_request:
     types:
-      - closed
-
-  pull_request_target:
-    types:
-      - edited
-      - labeled
-      - unlabeled
+      - opened
+      - reopened
+      - synchronize
       - ready_for_review
+      - closed
 
 permissions:
   contents: write
@@ -18,7 +15,6 @@ permissions:
 
 jobs:
   verifica-label:
-    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +24,15 @@ jobs:
           script: |
             const pr = context.payload.pull_request
 
-            if (pr.draft) return
+            if (context.payload.action !== 'closed') {
+              core.info('Controllo label saltato: viene eseguito solo alla chiusura della PR')
+              return
+            }
+
+            if (!pr.merged) {
+              core.info('PR chiusa senza merge: nessun rilascio da preparare')
+              return
+            }
 
             const labels = pr.labels.map(l => l.name)
             const valide = ['major', 'minor', 'patch']
@@ -41,6 +45,7 @@ jobs:
             }
 
   aggiorna-draft:
+    needs: verifica-label
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
