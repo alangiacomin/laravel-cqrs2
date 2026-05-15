@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
+  phpstan:
     if: ${{ !contains(github.actor, '[bot]') }}
     runs-on: ubuntu-latest
 
