@@ -1,0 +1,82 @@
+name: Update changelog
+
+on:
+  pull_request:
+    types: [ closed ]
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' && !contains(github.actor, '[bot]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - run: bunx standard-version --skip.tag --skip.commit
+
+      - name: Normalize Unreleased section in CHANGELOG
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'CHANGELOG.md';
+          if (!fs.existsSync(path)) process.exit(0);
+          let txt = fs.readFileSync(path, 'utf8');
+
+          // Find all version-like headers (## or ### followed by semver)
+          const versionRegex = /^#{2,3}\s*\[?(\d+\.\d+\.\d+)\]?.*$/gim;
+          const matches = [];
+          let m;
+          while ((m = versionRegex.exec(txt)) !== null) {
+            matches.push({index: m.index, match: m[0]});
+          }
+
+          if (matches.length === 0) {
+            // nothing to do
+            process.exit(0);
+          }
+
+          const firstVersion = matches[0];
+          const secondVersionIndex = matches.length > 1 ? matches[1].index : txt.length;
+
+          // Intro is everything before the first version header
+          const intro = txt.slice(0, firstVersion.index);
+
+          // Content of the first version block (excluding the header line)
+          const headerLineLen = firstVersion.match.length;
+          const sectionContent = txt.slice(firstVersion.index + headerLineLen, secondVersionIndex).trim();
+
+          // Rest of changelog starts from second version header (if any)
+          const rest = txt.slice(secondVersionIndex).trim();
+
+          const unreleasedHeader = '## [Unreleased]\n\n';
+          const newTxt = intro.trim() + '\n\n' + unreleasedHeader + (sectionContent ? sectionContent + '\n\n' : '') + (rest ? rest + '\n' : '');
+
+          fs.writeFileSync(path, newTxt, 'utf8');
+          NODE
+
+      - name: Restore package files and commit changelog only
+        env:
+          LEFTHOOK: 0
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          # Restore package.json and lockfile modifications to avoid version bump commits
+          git restore --source=HEAD --worktree package.json bun.lock || true
+
+          # Stage only the changelog
+          git add CHANGELOG.md
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update changelog"
+            git push
+          fi

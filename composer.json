@@ -16,18 +16,18 @@
     }
   ],
   "require": {
-    "inertiajs/inertia-laravel": "^3.1.0",
-    "laravel/framework": "^13.8.0",
+    "inertiajs/inertia-laravel": "^3.3.1",
+    "laravel/framework": "^13.24.0",
     "php": "^8.4",
     "spatie/laravel-data": "^4.23.0",
     "spatie/laravel-typescript-transformer": "^2.6.0"
   },
   "require-dev": {
-    "larastan/larastan": "^3.9.6",
-    "laravel/pint": "^1.29.1",
+    "larastan/larastan": "^3.10.0",
+    "laravel/pint": "^1.30.4",
     "mockery/mockery": "^1.6.12",
     "orchestra/testbench": "^11.1.0",
-    "pestphp/pest": "^3.8.6"
+    "pestphp/pest": "^3.8.7"
   },
   "suggest": {
     "spatie/enum": "Install it in the consuming app only if you still use Spatie enum classes and want them transformed to TypeScript.",

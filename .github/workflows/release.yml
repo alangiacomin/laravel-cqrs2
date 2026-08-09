@@ -1,0 +1,103 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Release type
+        required: true
+        type: choice
+        default: auto
+        options:
+          - patch
+          - minor
+          - major
+  push:
+    branches:
+      - release
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ !contains(github.actor, '[bot]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - name: Create version
+        env:
+          LEFTHOOK: 0
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          npx standard-version --release-as "${{ github.event.inputs.release_type }}"
+          git push --follow-tags
+
+      - name: Extract release notes
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const cp = require('child_process');
+
+          const rawTag = cp.execSync('git describe --tags --abbrev=0').toString().trim();
+          const version = rawTag.replace(/^v/,'');
+          const path = 'CHANGELOG.md';
+          if (!fs.existsSync(path)) { fs.writeFileSync('RELEASE_NOTES.md',''); process.exit(0); }
+          let txt = fs.readFileSync(path,'utf8');
+
+          const lines = txt.split('\n');
+
+          // Remove Unreleased section if present
+          const unreleasedHeaderRegex = /^##\s*\[?Unreleased\]?/i;
+          const versionHeaderRegex = /^##\s*\[?(\d+\.\d+\.\d+)\]?/;
+
+          let startUn = -1;
+          for (let i = 0; i < lines.length; i++) {
+            if (unreleasedHeaderRegex.test(lines[i])) { startUn = i; break; }
+          }
+
+          if (startUn !== -1) {
+            let endUn = lines.length;
+            for (let j = startUn + 1; j < lines.length; j++) {
+              if (versionHeaderRegex.test(lines[j])) { endUn = j; break; }
+            }
+            // remove lines from startUn to endUn-1
+            lines.splice(startUn, endUn - startUn);
+            txt = lines.join('\n');
+            fs.writeFileSync(path, txt, 'utf8');
+          }
+
+          // Now extract the section for the released version
+          const out = [];
+          let collecting = false;
+          const versionHeaderRegexExact = new RegExp('^##\\s*\\[?'+version.replace(/\./g,'\\.')+'\\]?');
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (versionHeaderRegexExact.test(line)) { collecting = true; continue; }
+            if (collecting && /^##\s*\[?\d+\.\d+\.\d+\]?/.test(line)) break;
+            if (collecting) out.push(line);
+          }
+
+          fs.writeFileSync('RELEASE_NOTES.md', out.join('\n').trim(), 'utf8');
+          NODE
+
+      - name: Get tag
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          body_path: RELEASE_NOTES.md
+          tag_name: ${{ steps.get_tag.outputs.tag }}

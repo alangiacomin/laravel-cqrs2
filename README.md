@@ -21,5 +21,3 @@ Questo README è volutamente minimale: per esempi dettagliati e integrazione nel
 pacchetto.
 
 ## Applicazione base pronta all'uso
-
-
